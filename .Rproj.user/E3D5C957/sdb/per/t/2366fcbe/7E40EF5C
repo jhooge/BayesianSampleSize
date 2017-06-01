@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "\nn <- 45 ## number of observations\n\nN1 <- 48 ## N for scenario1\nKsas <- N1/2\npostprobu1 <- .8 ## upper posterior probability for scenario1\npostprobl1 <- .7 ## lower posterior probability for scenario1\npi_reference <- .7 ## reference pi-value used for power calculations\na1 <- 1 ## value of a1 of the Beta(a1,b1)-prior for pi1\nb1 <- 1 ## value of b1 of the Beta(a1,b1)-prior for pi1\na2 <- 1 ## value of a2 of the Beta(a2,b2)-prior for pi2\nb2 <- 1 ## value of b2 of the Beta(a2,b2)-prior for pi2\n\n# \n# for (k in 0:5) {\n#   nsas <- k\n#   \n#   i <- min(sum(Ksas, a1, b1, -1),\n#            sum(nsas, a1, a2, -1))\n#   j <- max(0, \n#            sum(Ksas-N1-nsas, a1-b2)\n#   )+1\n#   print(sprintf(\"k:%i\", k))\n#   print(sprintf(\"%i:%i\", i, j))\n#   print(\"---\")\n#   for(x1_ in rev(i:j)) {\n#     print(x1_)\n#   }\n#   print(\"---\")\n# }\n\n\nprob_ge_x1_B <- c()\nfor (k in 0:5) {\n  cUk <- NULL\n  nsas <- k\n  i <- min(sum(Ksas, a1, b1, -1),\n           sum(nsas, a1, a2, -1))\n  j <- max(0,\n           Ksas-(N1-nsas)+a1-b2)+1\n  print(sprintf(\"k:%i\", k))\n  print(\"---\")\n  for (x1_ in rev(i:j)) {\n    print(x1_)\n    ## R/SAS equivalency\n    ## dhyper(x,M,N-M,n) = PROBHYPR(N,M,n,x)\n    ## SAS Code:\n    ## prob_ge_x1_B=1-probhypr(\n    ##                         N+a1+a2+b1+b2-2, ## N\n    ##                         Ksas+a1+b1-1,    ## M\n    ##                         nsas+a1+a2-1,    ## n\n    ##                         x1_-1            ## x\n    ##                         );\n    p <- dhyper(x1_-1, ## x\n                  sum(Ksas, a1, b1, -1), ## M\n                  sum(N1, a1, a2, b1, b2, -2)-sum(Ksas, a1, b1, -1), ## N-M\n                  sum(nsas, a1, a2, -1)) # n\n\n\n    if (p <= 1-postprobu1) {\n      cUk <- x1_-a1\n    } else {\n      x1_ <- j;\n    }\n\n    if(!is.null(cUk)) {\n      prob_ge_x1_B <- c(prob_ge_x1_B, p)\n    }\n\n  }\n  print(\"---\")\n}\nplot(prob_ge_x1_B)\n\n",
+    "created" : 1494430968472.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "930756053",
+    "id" : "7E40EF5C",
+    "lastKnownWriteTime" : 1494513196,
+    "last_content_update" : 1494513196762,
+    "path" : "~/workspace/R/projects/BayesianSampleSize/sandbox.R",
+    "project_path" : "sandbox.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

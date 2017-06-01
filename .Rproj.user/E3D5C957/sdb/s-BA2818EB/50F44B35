@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "\n# This is the user-interface definition of a Shiny web application.\n# You can find out more about building applications with Shiny here:\n#\n# http://shiny.rstudio.com\n#\n\nlibrary(shiny)\nlibrary(plotly)\n\nshinyUI(fluidPage(\n  withMathJax(),\n  \n  # Application title\n  titlePanel(\"Sample Size Calculation\"),\n  \n  # Sidebar with a slider input for number of bins\n  sidebarLayout(\n    sidebarPanel(\n      h3(\"Likelihood Parameters\"),\n      h3(withMathJax(\"$$X\\\\sim Bin(n, \\\\pi), with$$\")),\n      # fluidRow(\n      #   column(4,\n      #          numericInput(\"seed\", withMathJax(\"$$\\\\textbf{Seed}\\\\ \\\\textbf{for}\\\\ \\\\textbf{sampling}$$\"), \n      #                       value = 42))),\n      fluidRow(\n        column(4,\n               numericInput(\"n\", withMathJax(\"$$\\\\textbf{Number}\\\\ \\\\textbf{of}\\\\ \\\\textbf{samples}\\\\ \\\\textbf{n}$$\"), \n                            min = 1, value = 10))),\n      fluidRow(\n        column(4,\n          radioButtons(\"radioSample\", \"Sample by:\",\n                       choices=c(\"Success Probability\"=\"prob\",\n                                 \"Number of Successes\"=\"successes\")))),\n      fluidRow(\n        column(4,\n          uiOutput(\"samplingInput\"))),\n      # fluidRow(\n      #   column(4,\n      #          numericInput(\"pi0\", withMathJax(\"$$\\\\pi_{0}, with\\\\ H_{0}: \\\\pi\\\\leq\\\\pi_{0}, H_{1}: \\\\pi>\\\\pi_{0}$$\"), \n      #                       min = 0, max = 1, step=.01, value = .5))),\n      h3(\"Prior Parameters\"),\n      h3(withMathJax(\"$$p(\\\\pi)=Beta(\\\\pi|\\\\alpha, \\\\beta), with$$\")),\n      fluidRow(\n        column(3, \n               numericInput(\"alpha\", withMathJax(\"$$\\\\alpha$$\"), \n                            min = 0, step=.05, value = 1)),\n        column(3, \n               numericInput(\"beta\", withMathJax(\"$$\\\\beta$$\"), \n                            min = 0, step=.05, value = 1))\n      )\n    ),\n    \n    # Show a plot of the generated distribution\n    mainPanel(\n      fluidRow(column(11, \n                      plotlyOutput(\"triPlot\"),\n                      plotlyOutput(\"posteriorProbPlot\"))\n               ),\n      h2(\"Parametrization\"),\n      wellPanel(\n        fluidRow(\n          column(4, \n                 h3(\"Prior\"), \n                 withMathJax(uiOutput(\"priorDistFormula\"))),\n          column(4, \n                 h3(\"Likelihood\"), \n                 withMathJax(uiOutput(\"likelihoodFormula\"))),\n          column(4, \n                 h3(\"Posterior\"), \n                 withMathJax(uiOutput(\"posteriorFormula\")))\n        )\n      ),\n      h2(\"Point Estimates\"),\n      wellPanel(\n        fluidRow(\n          column(4, \n                 h3(\"Prior\"),\n                 tableOutput(\"pointEst_Prior\")),\n          column(4, \n                 h3(\"Likelihood\"),\n                 tableOutput(\"pointEst_Likelihood\")),\n          column(4, \n                 h3(\"Posterior\"),\n                 tableOutput(\"pointEst_Posterior\")))\n      )\n    )\n  )\n))\n",
+    "created" : 1494430953229.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1480787964",
+    "id" : "50F44B35",
+    "lastKnownWriteTime" : 1496326991,
+    "last_content_update" : 1496326991211,
+    "path" : "~/workspace/R/projects/BayesianSampleSize/ui.R",
+    "project_path" : "ui.R",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "n <- 45 ## number of observations\n\nN1 <- 48 ## N for scenario1\nKsas <- N1/2\npostprobu1 <- .8 ## upper posterior probability for scenario1\npostprobl1 <- .7 ## lower posterior probability for scenario1\npi_reference <- .7 ## reference pi-value used for power calculations\na1 <- 1 ## value of a1 of the Beta(a1,b1)-prior for pi1\nb1 <- 1 ## value of b1 of the Beta(a1,b1)-prior for pi1\na2 <- 1 ## value of a2 of the Beta(a2,b2)-prior for pi2\nb2 <- 1 ## value of b2 of the Beta(a2,b2)-prior for pi2\n\n\nn1 <- 10\nn2 <- 10\npi_1 <- .8\npi_2 <- .5\nx1 <- rbinom(10, 1, pi_1)\nx2 <- rbinom(10, 1, pi_2)\nk <- sum(x1, x2)\n\nodds_ratio <- function(p1, p2) {\n  return(prod(p1,1-p2)/prod(p2,1-p1))\n}\n\nright_term\n\nprod(odds_ratio(pi_1, pi_2)**x1, 1-pi\n\nchoose(n1,x1)*choose(n2,k-x1)\n\n",
+    "created" : 1494503852843.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "4110372088",
+    "id" : "E1BA6AB6",
+    "lastKnownWriteTime" : 4048208493707014517,
+    "last_content_update" : 1494508161527,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -35,10 +35,6 @@ shinyUI(fluidPage(
       fluidRow(
         column(4,
           uiOutput("samplingInput"))),
-      # fluidRow(
-      #   column(4,
-      #          numericInput("pi0", withMathJax("$$\\pi_{0}, with\\ H_{0}: \\pi\\leq\\pi_{0}, H_{1}: \\pi>\\pi_{0}$$"), 
-      #                       min = 0, max = 1, step=.01, value = .5))),
       h3("Prior Parameters"),
       h3(withMathJax("$$p(\\pi)=Beta(\\pi|\\alpha, \\beta), with$$")),
       fluidRow(
@@ -48,14 +44,35 @@ shinyUI(fluidPage(
         column(3, 
                numericInput("beta", withMathJax("$$\\beta$$"), 
                             min = 0, step=.05, value = 1))
-      )
+      ),
+      h3("Hypothesis Parameters"),
+      h3(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}>'Go'$$")),
+      fluidRow(
+        column(4,
+               numericInput("pi_u", withMathJax("$$\\pi_{u}$$"),
+                            min = 0, max = 1, step=.01, value = .5)),
+        column(4,
+               numericInput("p_u", withMathJax("$$p_{u}$$"),
+               min = 0, max = 1, step=.01, value = .5))),
+      h3(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}>'No Go'$$")),
+      fluidRow(
+        column(4,
+               numericInput("pi_l", withMathJax("$$\\pi_{l}$$"),
+               min = 0, max = 1, step=.01, value = .5)),
+        column(4,
+               numericInput("p_l", withMathJax("$$p_{l}$$"),
+               min = 0, max = 1, step=.01, value = .5)))
     ),
     
     # Show a plot of the generated distribution
     mainPanel(
-      fluidRow(column(11, 
-                      plotlyOutput("triPlot"),
-                      plotlyOutput("posteriorProbPlot"))
+      fluidRow(column(12, 
+                      plotlyOutput("triPlot")
+                      # plotlyOutput("posteriorProbPlot")
+                      )
+               ),
+      fluidRow(column(6, plotOutput("posteriorCDFPlot")),
+               column(6, plotOutput("powerCurvePlot"))
                ),
       h2("Parametrization"),
       wellPanel(

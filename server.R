@@ -63,15 +63,22 @@ plotPosteriorCDFs <- function(k,
 plotPosteriorCDFs2 <- function(k, 
                                upper_cdf, lower_cdf, 
                                upper_crit, lower_crit) {
+  
   data <- data.frame(k, 
                      Upper=upper_cdf,
                      Lower=lower_cdf)
   data.molten <- melt(data, id.vars = "k")
   colnames(data.molten) <- c("k", "Function", "Probability")
   
-  fig <- plot_ly(data.molten, x = ~k, y= ~Probability,
+  fig <- plot_ly(source = "cdfPlot", 
+                 data.molten, x = ~k, y= ~Probability,
                  type = 'scatter', mode = 'lines', 
                  color = ~Function) %>%
+    add_trace(x = c(~lower_crit, ~upper_crit),
+              y = c(~lower_cdf[lower_crit], ~upper_cdf[upper_crit]),
+              type = 'scatter', mode = 'markers',
+              marker = list(color = 'rgba(67,67,67,1)',
+                            size = 8)) %>%
     layout(title = 'Cummulative Densities',
            hovermode="all",
            xaxis = list(title = 'Number of Successes'),
@@ -85,7 +92,7 @@ plotPosteriorCDFs2 <- function(k,
 plotPowerCurves <- function(thetas, 
                             upper_power, lower_power, overall_power,
                             upper_crit, lower_crit) {
-  
+  ##
   data <- data.frame(theta=thetas, 
                      NoGo=upper_power,
                      Go=lower_power,
@@ -327,13 +334,18 @@ shinyServer(function(input, output) {
   
   output$powerCurvePlot2 <- renderPlotly({
     
+    # eventdata <- event_data("plotly_hover", source = "cdfPlot")
+    # validate(need(!is.null(eventdata), "Hover over the cdf chart to populate this power plot"))
+    
     n <- input$n
     alpha <- input$alpha
     beta  <- input$beta
     theta_u <- input$pi_u
     theta_l <- input$pi_l
     p_u <- input$p_u
+    # p_u <- subset(eventdata, curveNumber==0)$y
     p_l <- input$p_l
+    # p_l <- subset(eventdata, curveNumber==1)$y
     
     upper_cdf <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
     lower_cdf <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)

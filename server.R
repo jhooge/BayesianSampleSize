@@ -60,20 +60,69 @@ plotPosteriorCDFs <- function(k,
   return(fig)
 }
 
+plotPosteriorCDFs2 <- function(k, 
+                               upper_cdf, lower_cdf, 
+                               upper_crit, lower_crit) {
+  data <- data.frame(k, 
+                     Upper=upper_cdf,
+                     Lower=lower_cdf)
+  data.molten <- melt(data, id.vars = "k")
+  colnames(data.molten) <- c("k", "Function", "Probability")
+  
+  fig <- plot_ly(data.molten, x = ~k, y= ~Probability,
+                 type = 'scatter', mode = 'lines', 
+                 color = ~Function) %>%
+    layout(title = 'Cummulative Densities',
+           hovermode="all",
+           xaxis = list(title = 'Number of Successes'),
+           yaxis = list(title = 'Probability',
+                        range = c(0, 1)),
+           legend = list(orientation = 'h'))
+  
+  return(fig)
+}
+
 plotPowerCurves <- function(thetas, 
                             upper_power, lower_power, overall_power,
                             upper_crit, lower_crit) {
   
   data <- data.frame(theta=thetas, 
-                     UpperPower=upper_power,
-                     LowerPower=lower_power,
-                     OverallPower=overall_power)
+                     NoGo=upper_power,
+                     Go=lower_power,
+                     Indecisive=overall_power)
   
   data.molten <- melt(data, id.vars = "theta")
   colnames(data.molten) <- c("theta", "Function", "Power")
   
   fig <- ggplot(data.molten, aes(x=theta, y=Power, color=Function)) + 
     geom_line()
+  
+  return(fig)
+}
+
+plotPowerCurves2 <- function(thetas, 
+                            upper_power, lower_power, overall_power,
+                            upper_crit, lower_crit) {
+  
+  data <- data.frame(theta=thetas, 
+                     NoGo=upper_power,
+                     Go=lower_power,
+                     Indecisive=overall_power)
+  
+  data.molten <- melt(data, id.vars = "theta")
+  colnames(data.molten) <- c("theta", "Function", "Power")
+  
+  fig <- plot_ly(data.molten, x = ~theta, y= ~Power,
+                 type = 'scatter', mode = 'lines', 
+                 color = ~Function) %>%
+    layout(title = 'Power Curves',
+           hovermode="all",
+           xaxis = list(title = 'Theta',
+                        tick0 = 0,
+                        dtick = 0.1),
+           yaxis = list(title = 'Power',
+                        range = c(0, 1)),
+           legend = list(orientation = 'h'))
   
   return(fig)
 }
@@ -221,6 +270,28 @@ shinyServer(function(input, output) {
     return(fig)
   })
   
+  output$posteriorCDFPlot2 <- renderPlotly({
+    
+    n <- input$n
+    alpha <- input$alpha
+    beta <- input$beta
+    theta_u <- input$pi_u
+    theta_l <- input$pi_l
+    p_u <- input$p_u
+    p_l <- input$p_l
+    
+    ## Compute critical values
+    ## vars for critical value calculation
+    upper_cdf  <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
+    lower_cdf  <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
+    upper_crit <- max(which(upper_cdf >= p_u))
+    lower_crit <- min(which(lower_cdf >= p_l))
+    
+    print(upper_crit)
+    fig <- plotPosteriorCDFs2(1:n, upper_cdf, lower_cdf, upper_crit, lower_crit)
+    return(fig)
+  })
+  
   output$powerCurvePlot <- renderPlot({
     
     n <- input$n
@@ -236,7 +307,6 @@ shinyServer(function(input, output) {
     upper_crit <- max(which(upper_cdf >= p_u))
     lower_crit <- min(which(lower_cdf >= p_l))
     
-    
     thetas <- seq(0, 1, length.out=100)
     upper_power <- posterior2(thetas, n, upper_crit, alpha, beta)
     upper_power <- upper_power/length(thetas)
@@ -250,6 +320,39 @@ shinyServer(function(input, output) {
     overall_power <- overall_power/length(thetas)
     overall_power <- overall_power/sum(overall_power)
     fig <- plotPowerCurves(thetas, 
+                           upper_power, lower_power, overall_power,
+                           upper_crit, lower_crit)
+    return(fig)
+  })
+  
+  output$powerCurvePlot2 <- renderPlotly({
+    
+    n <- input$n
+    alpha <- input$alpha
+    beta  <- input$beta
+    theta_u <- input$pi_u
+    theta_l <- input$pi_l
+    p_u <- input$p_u
+    p_l <- input$p_l
+    
+    upper_cdf <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
+    lower_cdf <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
+    upper_crit <- max(which(upper_cdf >= p_u))
+    lower_crit <- min(which(lower_cdf >= p_l))
+    
+    thetas <- seq(0, 1, length.out=100)
+    upper_power <- posterior2(thetas, n, upper_crit, alpha, beta)
+    upper_power <- upper_power/length(thetas)
+    upper_power <- 1-cumsum(upper_power)
+    
+    lower_power <- posterior2(thetas, n, lower_crit, alpha, beta)
+    lower_power <- lower_power/length(thetas)
+    lower_power <- cumsum(lower_power)
+    
+    overall_power <- lower_power- (1-upper_power)
+    overall_power <- overall_power/length(thetas)
+    overall_power <- overall_power/sum(overall_power)
+    fig <- plotPowerCurves2(thetas, 
                            upper_power, lower_power, overall_power,
                            upper_crit, lower_crit)
     return(fig)
@@ -294,6 +397,7 @@ shinyServer(function(input, output) {
                                                    \\end{align}$$', sum(alpha, k), sum(beta, n, -k))))
     return(uiElement)
   })
+  
   
   ## point estimate calculations
   output$pointEst_Prior <- renderTable({

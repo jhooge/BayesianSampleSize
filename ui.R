@@ -46,7 +46,7 @@ shinyUI(fluidPage(
                             min = 0, step=.05, value = 1))
       ),
       h3("Hypothesis Parameters"),
-      h3(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}>'Go'$$")),
+      h3(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}:\\ Go$$")),
       fluidRow(
         column(4,
                numericInput("pi_u", withMathJax("$$\\pi_{u}$$"),
@@ -54,7 +54,7 @@ shinyUI(fluidPage(
         column(4,
                numericInput("p_u", withMathJax("$$p_{u}$$"),
                min = 0, max = 1, step=.01, value = .5))),
-      h3(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}>'No Go'$$")),
+      h3(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}:\\ No\\ Go$$")),
       fluidRow(
         column(4,
                numericInput("pi_l", withMathJax("$$\\pi_{l}$$"),
@@ -66,14 +66,12 @@ shinyUI(fluidPage(
     
     # Show a plot of the generated distribution
     mainPanel(
-      fluidRow(column(12, 
-                      plotlyOutput("triPlot")
-                      # plotlyOutput("posteriorProbPlot")
-                      )
-               ),
+      fluidRow(column(12, plotlyOutput("triPlot"))),
+      fluidRow(column(6, plotlyOutput("posteriorCDFPlot2")),
+               column(6, plotlyOutput("powerCurvePlot2"))),
       fluidRow(column(6, plotOutput("posteriorCDFPlot")),
                column(6, plotOutput("powerCurvePlot"))
-               ),
+      ),
       h2("Parametrization"),
       wellPanel(
         fluidRow(

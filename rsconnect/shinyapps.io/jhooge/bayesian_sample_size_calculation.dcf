@@ -3,9 +3,9 @@ title: Bayesian Sample Size Calculation
 account: jhooge
 server: shinyapps.io
 appId: 185439
-bundleId: 863046
+bundleId: 869514
 url: https://jhooge.shinyapps.io/bayesian_sample_size_calculation/
-when: 1497264760.78028
+when: 1497603511.25333
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: sandbox.R

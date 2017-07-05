@@ -1,19 +1,33 @@
-.irs-from, .irs-to, .irs-single {
-    color: #fff;
-      font-size: 10px; line-height: 1.333;
-    text-shadow: none;
-    padding: 1px 5px;
-    background: #66C2A5;
-      -moz-border-radius: 4px;
-    border-radius: 4px;
-  }
-  
-.irs-from:after, .irs-to:after, .irs-single:after {
-    position: absolute; display: block; content: "";
-    bottom: -6px; left: 50%;
-    width: 0; height: 0;
-    margin-left: -3px;
-    overflow: hidden;
-    border: 3px solid transparent;
-    border-top-color: #66C2A5;
-  }
+.js-irs-0 .irs-single, 
+.js-irs-0 .irs-bar-edge, 
+.js-irs-0 .irs-bar {background: #66C2A5} 
+.js-irs-0 .irs-min {color: #66C2A5; 
+                    font-size: 11px}
+.js-irs-0 .irs-max {color: #66C2A5; 
+                    font-size: 11px}
+                    
+.js-irs-1 .irs-single, 
+.js-irs-1 .irs-bar-edge, 
+.js-irs-1 .irs-bar {background: #66C2A5} 
+.js-irs-1 .irs-min {color: #66C2A5; 
+                    font-size: 11px}
+.js-irs-1 .irs-max {color: #66C2A5; 
+                    font-size: 11px}
+                    
+.js-irs-2 .irs-single, 
+.js-irs-2 .irs-bar-edge, 
+.js-irs-2 .irs-bar {background: #8DA0CB} 
+.js-irs-2 .irs-min {color: #8DA0CB; 
+                    font-size: 11px}
+.js-irs-2 .irs-max {color: #8DA0CB; 
+                    font-size: 11px}
+                    
+.js-irs-3 .irs-single, 
+.js-irs-3 .irs-bar-edge, 
+.js-irs-3 .irs-bar {background: #8DA0CB} 
+.js-irs-3 .irs-min {color: #8DA0CB; 
+                    font-size: 11px}
+.js-irs-3 .irs-max {color: #8DA0CB; 
+                    font-size: 11px}
+                    
+

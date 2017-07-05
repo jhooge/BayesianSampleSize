@@ -6,10 +6,32 @@
 #
 
 library(shiny)
+library(shinythemes)
 library(plotly)
 
+
 shinyUI(fluidPage(
-  
+  # themeSelector(), ## dynamic theme
+  theme = shinytheme("superhero"), ## fixed theme
+  withMathJax(),
+
+  # list(tags$head(
+  #   HTML(
+  #     '<link rel="icon", href="Logo_Cross_Screen_RGB.png", type="image/png" />'
+  #   )
+  # )),
+  #
+  # logo <- img(src="Logo_Cross_Screen_RGB.png",
+  #             height = 80,
+  #             width = 80,
+  #             style = "margin:10px 10px;
+  #                      float:right;"),
+
+
+  # ## Title without logo
+  titlePanel(title = "Sample Size Calculation",
+             windowTitle = "Sample Size Calculation"),
+
   # includeCSS(file.path("www/bootstrap3_3_7.css")),
   # includeCSS(file.path("www/normalize.css")),
 
@@ -21,42 +43,29 @@ shinyUI(fluidPage(
   # includeCSS(file.path("www/ion.rangeSlider.skinFlat.css")),
   # includeCSS(file.path("www/ion.rangeSlider.css")),
 
-  # includeCSS(file.path("www/styles.css")),
-  
-  withMathJax(),
-  
-  # Application title
-  titlePanel("Sample Size Calculation"),
-  
+  includeCSS(file.path("www/styles.css")),
+
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
       h3("Likelihood Parameters"),
-      h3(withMathJax("$$X\\sim Bin(n, \\pi), with$$")),
+      h3(withMathJax("$$X\\sim Bin(n, \\Theta), with$$")),
       # fluidRow(
       #   column(4,
-      #          numericInput("seed", withMathJax("$$\\textbf{Seed}\\ \\textbf{for}\\ \\textbf{sampling}$$"), 
+      #          numericInput("seed", withMathJax("$$\\textbf{Seed}\\ \\textbf{for}\\ \\textbf{sampling}$$"),
       #                       value = 42))),
       fluidRow(
         column(4,
-               numericInput("n", withMathJax("$$\\textbf{Number}\\ \\textbf{of}\\ \\textbf{samples}\\ \\textbf{n}$$"), 
+               numericInput("n", withMathJax("$$\\textbf{Number}\\ \\textbf{of}\\ \\textbf{samples}\\ \\textbf{n}$$"),
                             min = 1, value = 10))),
-      fluidRow(
-        column(4,
-          radioButtons("radioSample", "Sample by:",
-                       choices=c("Success Probability"="prob",
-                                 "Number of Successes"="successes")))),
-      fluidRow(
-        column(4,
-          uiOutput("samplingInput"))),
       h3("Prior Parameters"),
       h3(withMathJax("$$p(\\pi)=Beta(\\pi|\\alpha, \\beta), with$$")),
       fluidRow(
-        column(3, 
-               numericInput("alpha", withMathJax("$$\\alpha$$"), 
+        column(3,
+               numericInput("alpha", withMathJax("$$\\alpha$$"),
                             min = 0, step=.05, value = 1)),
-        column(3, 
-               numericInput("beta", withMathJax("$$\\beta$$"), 
+        column(3,
+               numericInput("beta", withMathJax("$$\\beta$$"),
                             min = 0, step=.05, value = 1))
       )
       # h3("Hypothesis Parameters"),
@@ -79,57 +88,102 @@ shinyUI(fluidPage(
         #        min = 0, max = 1, step=.01, value = .5))
       # )
     ),
-    
+
     # Show a plot of the generated distribution
     mainPanel(
-      fluidRow(column(12, plotlyOutput("triPlot"))),
-      fluidRow(column(6, plotlyOutput("posteriorCDFPlot2")),
-               h3("Hypothesis Parameters"),
-               column(3, h4(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}:\\ Go$$")),
-                         sliderInput("pi_u", withMathJax("$$\\pi_{u}$$"),
-                                     min = 0, max = 1, step=.01, value = .5,
-                                     animate=T),
-                         sliderInput("p_u", withMathJax("$$p_{u}$$"),
-                                     min = 0, max = 1, step=.01, value = .5,
-                                     animate=T)),
-               column(3, h4(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}:\\ No\\ Go$$")),
-                         sliderInput("pi_l", withMathJax("$$\\pi_{l}$$"),
-                                     min = 0, max = 1, step=.01, value = .5,
-                                     animate=T),
-                         sliderInput("p_l", withMathJax("$$p_{l}$$"),
-                                     min = 0, max = 1, step=.01, value = .5,
-                                     animate=T))),
-      fluidRow(column(6, plotlyOutput("powerCurvePlot2"))),
-      # fluidRow(column(6, plotOutput("posteriorCDFPlot")),
-      #          column(6, plotOutput("powerCurvePlot"))
-      # ),
-      h2("Parametrization"),
-      wellPanel(
-        fluidRow(
-          column(4, 
-                 h3("Prior"), 
-                 withMathJax(uiOutput("priorDistFormula"))),
-          column(4, 
-                 h3("Likelihood"), 
-                 withMathJax(uiOutput("likelihoodFormula"))),
-          column(4, 
-                 h3("Posterior"), 
-                 withMathJax(uiOutput("posteriorFormula")))
-        )
-      ),
-      h2("Point Estimates"),
-      wellPanel(
-        fluidRow(
-          column(4, 
-                 h3("Prior"),
-                 tableOutput("pointEst_Prior")),
-          column(4, 
-                 h3("Likelihood"),
-                 tableOutput("pointEst_Likelihood")),
-          column(4, 
-                 h3("Posterior"),
-                 tableOutput("pointEst_Posterior")))
-      )
+      tabsetPanel(type = "tabs",
+                  tabPanel("Posterior Estimation",
+                           br(),
+                           wellPanel(
+                             fluidRow(column(8, plotlyOutput("triPlot")
+                                                # plotlyOutput("trialPlot")
+                                             ),
+                                      fluidRow(
+                                        column(4,
+                                              radioButtons("radioSample", "Sample by:",
+                                                           choices=c("Success Probability"="prob",
+                                                                     "Number of Successes"="successes")),
+                                              uiOutput("samplingInput")))
+                             )
+                           ),
+                           h2("Parametrization"),
+                           wellPanel(
+                             fluidRow(
+                               column(4,
+                                      h3("Prior"),
+                                      withMathJax(uiOutput("priorDistFormula"))),
+                               column(4,
+                                      h3("Likelihood"),
+                                      withMathJax(uiOutput("likelihoodFormula"))),
+                               column(4,
+                                      h3("Posterior"),
+                                      withMathJax(uiOutput("posteriorFormula")))
+                             )
+                           ),
+                           h2("Point Estimates"),
+                           wellPanel(
+                             fluidRow(
+                               column(4,
+                                      h3("Prior"),
+                                      tableOutput("pointEst_Prior")),
+                               column(4,
+                                      h3("Likelihood"),
+                                      tableOutput("pointEst_Likelihood")),
+                               column(4,
+                                      h3("Posterior"),
+                                      tableOutput("pointEst_Posterior")))
+                           )),
+                  # tabPanel("Power Calculation",
+                  #          br(),
+                  #          wellPanel(
+                  #            fluidRow(column(6, plotlyOutput("posteriorCDFPlot2")),
+                  #                     # h3("Hypothesis Parameters"),
+                  #                     column(3, h4(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}:\\ Go$$")),
+                  #                            sliderInput("pi_u", withMathJax("$$\\pi_{u}$$"),
+                  #                                        min = 0, max = 1, step=.01, value = .5,
+                  #                                        animate=T),
+                  #                            sliderInput("p_u", withMathJax("$$p_{u}$$"),
+                  #                                        min = 0, max = 1, step=.01, value = .5,
+                  #                                        animate=T)),
+                  #                     column(3, h4(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}:\\ No\\ Go$$")),
+                  #                            sliderInput("pi_l", withMathJax("$$\\pi_{l}$$"),
+                  #                                        min = 0, max = 1, step=.01, value = .5,
+                  #                                        animate=T),
+                  #                            sliderInput("p_l", withMathJax("$$p_{l}$$"),
+                  #                                        min = 0, max = 1, step=.01, value = .5,
+                  #                                        animate=T)))
+                  #          ),
+                  #          wellPanel(
+                  #           fluidRow(column(6, plotlyOutput("powerCurvePlot2")))
+                  #          )),
+                  tabPanel("Power Calculation",
+                           br(),
+                           wellPanel(
+                             fluidRow(column(6, plotlyOutput("posterior3DPlot")),
+                                      # h3("Hypothesis Parameters"),
+                                      column(3, h4(withMathJax("$$P(\\theta\\geq\\theta_{u})>p_{u}:\\ Go$$")),
+                                             sliderInput("pi_u", withMathJax("$$\\theta_{u}$$"),
+                                                         min = 0, max = 1, step=.01, value = .5,
+                                                         animate=T),
+                                             sliderInput("p_u", withMathJax("$$p_{u}$$"),
+                                                         min = 0, max = 1, step=.01, value = .5,
+                                                         animate=T)),
+                                      column(3, h4(withMathJax("$$P(\\theta<\\theta_{l})>p_{l}:\\ No\\ Go$$")),
+                                             sliderInput("pi_l", withMathJax("$$\\theta_{l}$$"),
+                                                         min = 0, max = 1, step=.01, value = .5,
+                                                         animate=T),
+                                             sliderInput("p_l", withMathJax("$$p_{l}$$"),
+                                                         min = 0, max = 1, step=.01, value = .5,
+                                                         animate=T)))
+                           ),
+                           wellPanel(
+                             fluidRow(column(6, plotlyOutput("posterior2D_k")),
+                                      column(6, plotlyOutput("posterior2D_theta")))
+                           )),
+                  tabPanel("About",
+                           includeHTML("www/about.html")
+                           )
+                  )
     )
   )
 ))

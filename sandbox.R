@@ -1,15 +1,16 @@
 library(reshape2)
 library(ggplot2)
+library(plotly)
 
-n <- 100 ## sample size
+n <- 50 ## sample size
 success_prob <- .1 ## success probability
-alpha <- 1 ## prior param
-beta  <- 1 ## prior param
+alpha <- .5 ## prior param
+beta  <- .5 ## prior param
 
-theta_u <- .5
-theta_l <- .5
-p_u <- .5
-p_l <- .5
+theta_u <- .8
+theta_l <- .8
+p_u <- .8
+p_l <- .7
 
 posterior <- function(theta, n, success_prob, alpha, beta) {
   # x <- rbinom(n, size = 1, success_prob)
@@ -51,13 +52,13 @@ plotPosteriorCDFs <- function(k,
   
   fig <- ggplot(data.molten, aes(x=k, y=Probability, color=Function)) + 
     geom_line() +
-    geom_vline(xintercept = c_u, 
+    geom_vline(xintercept = upper_crit, 
                color="#F78E87", linetype="dashed") +
-    geom_hline(yintercept = upper_posterior_pwr[upper_crit],
+    geom_hline(yintercept = upper_cdf[upper_crit],
                color="#F78E87", linetype="dashed") +
-    geom_vline(xintercept = c_l,
+    geom_vline(xintercept = lower_crit,
                color="#2FC9CD", linetype="dashed") +
-    geom_hline(yintercept = lower_posterior_pwr[lower_crit],
+    geom_hline(yintercept = lower_cdf[lower_crit],
                color="#2FC9CD", linetype="dashed")
   return(fig)
 }
@@ -86,7 +87,49 @@ upper_cdf <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 
 lower_cdf <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
 upper_crit <- max(which(upper_cdf >= p_u))
 lower_crit <- min(which(lower_cdf >= p_l))
-cdf_fig <- plotPosteriorCDFs(1:n, upper_cdf, lower_cdf, upper_crit, lower_crit)
+
+power_go <- c()
+thetas <- seq(0, 1, length.out=100)
+for (theta in thetas) {
+  for (k in 1:n) {
+    # power_go <- c(power_go, dbinom(k,n, theta))
+    power_go <- c(power_go, posterior2(theta, n, k, alpha, beta))
+  } 
+}
+
+power_go_mat <- matrix(power_go, nrow = n, ncol=100)
+power_go_mat <- apply(power_go_mat, 1, function(x) x/sum(x))
+p <- plot_ly(x=thetas, y=1:n, z=power_go_mat) %>% 
+  add_surface() %>%
+  layout(title = 'Binomial Densities',
+         hovermode="all",
+         scene = list(
+         xaxis = list(title = 'π',
+                      tick0 = 0,
+                      dtick = 0.1,
+                      showgrid = F),
+         yaxis = list(title = 'k',
+                      showgrid = F)))
+p
+
+go_power <- c()
+for (k in upper_crit:n) {
+  go_power <- c(go_power, power_go_mat[,k])
+}
+plot(go_power)
+
+nogo_power <- c()
+for (k in lower_crit:n) {
+  nogo_power <- c(nogo_power, power_go_mat[,k])
+}
+
+
+
+plot(sapply(seq(0, 1, length.out = 100), function(x) qbeta(x, 1, 1)))
+
+
+
+plotPosteriorCDFs(1:n, upper_cdf, lower_cdf, upper_crit, lower_crit)
 
 ## Compute Power Curves at the determined critical value over theta
 ## vars for power calculation
@@ -105,6 +148,3 @@ overall_power <- overall_power/sum(overall_power)
 power_fig <- plotPowerCurves(thetas, 
                              upper_power, lower_power, overall_power,
                              upper_crit, lower_crit) 
-
-cdf_fig
-power_fig

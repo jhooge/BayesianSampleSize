@@ -156,30 +156,41 @@ shinyUI(fluidPage(
                   #          wellPanel(
                   #           fluidRow(column(6, plotlyOutput("powerCurvePlot2")))
                   #          )),
-                  tabPanel("Power Calculation",
+                  tabPanel("Exploration",
                            br(),
                            wellPanel(
-                             fluidRow(column(6, plotlyOutput("posterior3DPlot")),
-                                      # h3("Hypothesis Parameters"),
-                                      column(3, h4(withMathJax("$$P(\\theta\\geq\\theta_{u})>p_{u}:\\ Go$$")),
-                                             sliderInput("pi_u", withMathJax("$$\\theta_{u}$$"),
-                                                         min = 0, max = 1, step=.01, value = .5,
-                                                         animate=T),
-                                             sliderInput("p_u", withMathJax("$$p_{u}$$"),
-                                                         min = 0, max = 1, step=.01, value = .5,
-                                                         animate=T)),
-                                      column(3, h4(withMathJax("$$P(\\theta<\\theta_{l})>p_{l}:\\ No\\ Go$$")),
-                                             sliderInput("pi_l", withMathJax("$$\\theta_{l}$$"),
-                                                         min = 0, max = 1, step=.01, value = .5,
-                                                         animate=T),
-                                             sliderInput("p_l", withMathJax("$$p_{l}$$"),
-                                                         min = 0, max = 1, step=.01, value = .5,
-                                                         animate=T)))
+                             fluidRow(column(12, plotlyOutput("posterior3DPlot")))
                            ),
                            wellPanel(
                              fluidRow(column(6, plotlyOutput("posterior2D_k")),
                                       column(6, plotlyOutput("posterior2D_theta")))
                            )),
+                  tabPanel("Power Calculation",
+                           # h3("Hypothesis Parameters"),
+                           br(),
+                           wellPanel(
+                             fluidRow(
+                               column(8, plotlyOutput("powerCurvePlot")),
+                               column(4, 
+                                      sliderInput("theta_0", withMathJax("$$\\theta_{0}$$"),
+                                                  min = 0, max = 1, step=.01, value = .5,
+                                                  animate=T),
+                                      h4(withMathJax("$$P(\\theta\\geq\\theta_{0})>p_{u}:\\ Go$$")),
+                                      sliderInput("p_go", withMathJax("$$p_{u}$$"),
+                                                  min = 0, max = 1, step=.01, value = .5,
+                                                  animate=T),
+                                      h4(withMathJax("$$P(\\theta<\\theta_{0})>p_{l}:\\ No\\ Go$$")),
+                                      sliderInput("p_nogo", withMathJax("$$p_{l}$$"),
+                                                  min = 0, max = 1, step=.01, value = .5,
+                                                  animate=T)
+                                      )
+                             )),
+                           wellPanel(
+                             fluidRow(
+                               column(8, plotlyOutput("critValPlot"))
+                             )
+                           )
+                           ),
                   tabPanel("About",
                            includeHTML("www/about.html")
                            )

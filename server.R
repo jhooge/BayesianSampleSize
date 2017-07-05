@@ -22,52 +22,83 @@ betaStd <- function(alpha, beta) {
   return(sqrt((alpha * beta)/(((alpha + beta)**2) * (alpha + beta + 1))))
 }
 
-posterior2 <- function(theta, n, k, alpha, beta) {
+posterior <- function(theta, n, k, alpha=1, beta=1) {
+  x <- dbeta(theta, alpha+k, beta+n-k)
+  return(x)
+}
+
+## P(theta <= theta_0|k, alpha, beta)
+posterior_cdf <- function(theta, n, k, alpha=1, beta=1) {
+  stopifnot(theta >= 0)
+  stopifnot(theta <= 1)
   
-  posterior <- dbeta(theta, alpha+k, beta+n-k)
-  return(posterior)
+  # x <- pbeta(theta, alpha+k, beta+n-k)
+  x <- cumsum(posterior(theta, alpha, beta, n, k))
+  return(x)
 }
 
-posteriorCDF <- function(k, theta, alpha, beta) {
-  n <- max(k) ## sample size
-  ## P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
-  posterior_cdf <- sapply(1:n, function(k) posterior2(theta, n, k, alpha, beta))
-  posterior_cdf <- posterior_cdf/sum(posterior_cdf)
-  posterior_cdf <- cumsum(posterior_cdf)
-
-  return(posterior_cdf)
+densbeta <- function(theta, n, k, alpha=1, beta=1) {
+  stopifnot((theta < 1 || theta > 0) )
+  
+  x <- dbeta(theta, alpha+k, beta+n-k)
+  return(x)
+}
+#' Reimplementation of PROBNML function in SAS
+#' @description computes the probability that an observation from a 
+#'              binomial distribution Bin(n,theta) will be less than or equal to k. 
+#'
+#' @param theta is the probability of success for the 
+#'              binomial distribution, where 0<=theta<=1. 
+#'              In terms of acceptance sampling, is the 
+#'              probability of selecting a nonconforming item.
+#' @param n is the number of independent Bernoulli trials in the 
+#'          binomial distribution, where n>=1. In terms of acceptance 
+#'          sampling, n is the number of items in the sample.
+#' @param k is the number of successes, where 0<=k<=n. In terms of acceptance 
+#'          sampling, is the number of nonconforming items. 
+#'
+#' @return computes the probability that an observation from a 
+#'         binomial distribution Bin(n,theta) will be less than or equal to k. 
+#' @export
+probbnml <- function(theta, n, k) {
+  stopifnot(theta >= 0)
+  stopifnot(theta <= 1)
+  stopifnot(n >= 1)
+  
+  x <- sum(sapply(0:k, function(j) choose(n, j)*(theta**j)*((1-theta)**(n-j))))
+  return(x)
 }
 
-# plotPosteriorCDFs <- function(k,
-#                               upper_cdf, lower_cdf,
-#                               upper_crit, lower_crit) {
-# 
-#   data <- data.frame(k,
-#                      Upper=upper_cdf,
-#                      Lower=lower_cdf)
-#   data.molten <- melt(data, id.vars = "k")
-#   colnames(data.molten) <- c("k", "Function", "Probability")
-# 
-#   fig <- ggplot(data.molten, aes(x=k, y=Probability, color=Function)) +
-#     geom_line() +
-#     geom_vline(xintercept = upper_crit,
-#                color="#F78E87", linetype="dashed") +
-#     geom_hline(yintercept = upper_cdf[upper_crit],
-#                color="#F78E87", linetype="dashed") +
-#     geom_vline(xintercept = lower_crit,
-#                color="#2FC9CD", linetype="dashed") +
-#     geom_hline(yintercept = lower_cdf[lower_crit],
-#                color="#2FC9CD", linetype="dashed")
-#   return(fig)
-# }
+crit_k <- function(theta, prob, n, alpha=1, beta=1, type=c("go", "nogo")) {
+  stopifnot(theta >= 0)
+  stopifnot(theta <= 1)
+  stopifnot(prob >= 0)
+  stopifnot(prob <= 1)
+  stopifnot(type %in% c("go", "nogo"))
+  
+  x <- sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta))
+  x <- x/length(x)
+  x <- cumsum(x)
+  
+  k <- ifelse(type=="go", 
+              which.min(x <= prob),
+              which.max(x >= 1-prob))
+  k <- k-1 ## k starts at 0
+  
+  # print(paste0("Type=", type))
+  # print(sprintf("k=%i",k))
+  # print(sprintf("p_type=%.2f", prob))
+  # print(x)
+  
+  return(k)
+}
 
-plotPosteriorCDFs2 <- function(k,
-                               upper_cdf, lower_cdf,
-                               upper_crit, lower_crit) {
+plotPosteriorCDF <- function(k, go_cdf, nogo_cdf,
+                             k_go, k_nogo) {
 
   data <- data.frame(k,
-                     Upper=upper_cdf,
-                     Lower=lower_cdf)
+                     go=go_cdf,
+                     nogo=nogo_cdf)
   data.molten <- melt(data, id.vars = "k")
   colnames(data.molten) <- c("k", "Function", "Probability")
 
@@ -76,14 +107,14 @@ plotPosteriorCDFs2 <- function(k,
     size = 14,
     color = '#EBEBE9')
 
-  lower_crit_text <- paste0("Lower Crit. (", lower_crit, "|",
-                            round(lower_cdf[lower_crit], 4), ")")
+  k_nogo_text <- paste0("NoGo Crit. (", k_nogo, "|",
+                        round(nogo_cdf[k_nogo], 4), ")")
 
-  lower_crit_val <- list(
-    x = lower_crit,
-    y = lower_cdf[lower_crit],
-    text = paste0("Lower Crit. (", lower_crit, "|",
-                  round(lower_cdf[lower_crit], 4), ")"),
+  k_nogo_val <- list(
+    x = k_nogo,
+    y = lower_cdf[k_nogo],
+    text = paste0("Lower Crit. (", k_nogo, "|",
+                  round(nogo_cdf[k_nogo], 4), ")"),
     xref = "x",
     yref = "y",
     showarrow = TRUE,
@@ -93,13 +124,13 @@ plotPosteriorCDFs2 <- function(k,
     ay = -40
   )
 
-  upper_crit_text <- paste0("Upper Crit. (", upper_crit, "|",
-                            round(upper_cdf[upper_crit], 4), ")")
+  k_go_text <- paste0("Upper Crit. (", k_go, "|",
+                            round(go_cdf[k_go], 4), ")")
 
-  upper_crit_val <- list(
-    x = upper_crit,
-    y = upper_cdf[upper_crit],
-    text = upper_crit_text,
+  k_go_val <- list(
+    x = k_go,
+    y = go_cdf[k_go],
+    text = k_go_text,
     xref = "x",
     yref = "y",
     showarrow = TRUE,
@@ -109,11 +140,10 @@ plotPosteriorCDFs2 <- function(k,
     ay = -40
   )
 
-  annotations <- list(lower_crit_val,
-                      upper_crit_val)
+  annotations <- list(k_nogo_val,
+                      k_go_val)
 
-  fig <- plot_ly(source = "cdfPlot",
-                 data.molten, x = ~k, y= ~Probability,
+  fig <- plot_ly(data.molten, x = ~k, y= ~Probability,
                  type = 'scatter', mode = 'lines',
                  line = list(width = 5),
                  color = ~Function
@@ -136,32 +166,14 @@ plotPosteriorCDFs2 <- function(k,
   return(fig)
 }
 
-# plotPowerCurves <- function(thetas,
-#                             upper_power, lower_power, overall_power,
-#                             upper_crit, lower_crit) {
-#   ##
-#   data <- data.frame(theta=thetas,
-#                      NoGo=upper_power,
-#                      Go=lower_power,
-#                      Indecisive=overall_power)
-# 
-#   data.molten <- melt(data, id.vars = "theta")
-#   colnames(data.molten) <- c("theta", "Function", "Power")
-# 
-#   fig <- ggplot(data.molten, aes(x=theta, y=Power, color=Function)) +
-#     geom_line()
-# 
-#   return(fig)
-# }
 
-plotPowerCurves2 <- function(thetas,
-                            upper_power, lower_power, overall_power,
-                            upper_crit, lower_crit) {
+plotPowerCurves <- function(thetas,
+                            go_power, nogo_power, indecisive_power) {
 
   data <- data.frame(theta=thetas,
-                     Go=upper_power,
-                     NoGo=lower_power,
-                     Indecisive=overall_power)
+                     Go=go_power,
+                     NoGo=nogo_power,
+                     Indecisive=indecisive_power)
 
   data.molten <- melt(data, id.vars = "theta")
   colnames(data.molten) <- c("theta", "Function", "Power")
@@ -177,15 +189,15 @@ plotPowerCurves2 <- function(thetas,
                  color = ~Function) %>%
     layout(title = 'Power Curves',
            hovermode="all",
-           xaxis = list(title = 'theta_0',
+           xaxis = list(title = 'θ',
                         tick0 = 0,
                         dtick = 0.1,
                         showgrid = F),
            yaxis = list(title = 'Power',
-                        range = c(0, 1),
+                        dtick = 0.1,
+                        # range = c(0, 1),
                         showgrid = F),
-           # legend = list(orientation = 'h')
-           legend = list(x = 0.8, y = 0.5),
+           legend = list(orientation = 'h'),
            font = font,
            plot_bgcolor="transparent",
            paper_bgcolor="transparent")
@@ -211,7 +223,7 @@ plotDensities <- function(theta, posterior, likelihood, prior) {
                  color = ~Function) %>%
     layout(title = 'Density Functions',
            hovermode="all",
-           xaxis = list(title = "theta_0",
+           xaxis = list(title = "θ",
                         tick0 = 0,
                         dtick = 0.1,
                         showgrid = F),
@@ -225,17 +237,6 @@ plotDensities <- function(theta, posterior, likelihood, prior) {
 
   return(fig)
 }
-
-# plotTrials <- function(trials) {
-#
-#   fig <- plot_ly(
-#     x = c("Successes", "Fails"),
-#     y = c(sum(trials), sum(!trials)),
-#     type = "bar"
-#   )
-#
-#   return(fig)
-# }
 
 shinyServer(function(input, output) {
 
@@ -256,7 +257,7 @@ shinyServer(function(input, output) {
     d <- c()
     for (theta in thetas) {
       for (k in 1:n) {
-        d <- c(d, posterior2(theta, n, k, alpha, beta))
+        d <- c(d, posterior(theta, n, k, alpha, beta))
       } 
     }
     
@@ -283,13 +284,6 @@ shinyServer(function(input, output) {
     return(uiElement)
 
   })
-
-  ## plots
-
-  # output$trialPlot <- renderPlotly({
-  #   x <- x()
-  #   fig <- plotTrials(x)
-  # })
 
   output$triPlot <- renderPlotly({
 
@@ -373,64 +367,99 @@ shinyServer(function(input, output) {
 
     return(fig)
   })
-
-  # output$posteriorCDFPlot <- renderPlot({
-  # 
-  #   n <- input$n
-  #   alpha <- input$alpha
-  #   beta <- input$beta
-  #   theta_u <- input$pi_u
-  #   theta_l <- input$pi_l
-  #   p_u <- input$p_u
-  #   p_l <- input$p_l
-  # 
-  #   ## Compute critical values
-  #   ## vars for critical value calculation
-  #   upper_cdf  <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
-  #   lower_cdf  <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
-  #   upper_crit <- max(which(upper_cdf >= p_u))
-  #   lower_crit <- min(which(lower_cdf >= p_l))
-  #   fig <- plotPosteriorCDFs(1:n, upper_cdf, lower_cdf, upper_crit, lower_crit)
-  #   return(fig)
-  # })
-
-  output$posteriorCDFPlot2 <- renderPlotly({
-
+  
+  output$critValPlot <- renderPlotly({
+    
     n <- input$n
+    theta <- input$theta_0
     alpha <- input$alpha
-    beta <- input$beta
-    theta_u <- input$pi_u
-    theta_l <- input$pi_l
-    p_u <- input$p_u
-    p_l <- input$p_l
-
-    ## Compute critical values
-    ## vars for critical value calculation
-    upper_cdf  <- posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
-    lower_cdf  <- 1-posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
-    upper_crit <- min(which(upper_cdf >= p_u))
-    lower_crit <- max(which(lower_cdf >= p_l))
-
-    fig <- plotPosteriorCDFs2(1:n, upper_cdf, lower_cdf, upper_crit, lower_crit)
+    beta  <- input$beta
+    p_go <- input$p_go
+    p_nogo <- input$p_nogo
+    
+    validate(need(sum(p_go, p_nogo) >= 1, "The sum of Go and NoGo probabilities should be larger or equal to 1."))
+    
+    k_go   <- crit_k(theta=theta, prob=p_go, n=n, alpha=alpha, beta=beta, type="go")
+    k_nogo <- crit_k(theta=theta, prob=p_nogo, n=n, alpha=alpha, beta=beta, type="nogo")
+    
+    prob_go <- cumsum(sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta)))
+    prob_go <- prob_go/length(prob_go)
+    
+    prob_nogo <- cumsum(sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta)))
+    prob_nogo <- 1-prob_nogo/length(prob_nogo)
+    
+    data <- data.frame(k=0:n,
+                       Go=prob_go,
+                       NoGo=prob_nogo)
+    data.molten <- melt(data, id.vars = "k")
+    colnames(data.molten) <- c("k", "Function", "Probability")
+    
+    
+    font <- list(
+      # family = "sans serif",
+      size = 14,
+      color = '#EBEBE9')
+    
+    k_nogo_text <- paste0("NoGo Crit. (", k_nogo, "|",
+                          round(data$NoGo[k_nogo+1], 4), ")")
+    
+    k_nogo_val <- list(
+      x = k_nogo,
+      y = data$NoGo[k_nogo+1],
+      text = paste0("NoGo Crit. (", k_nogo, "|",
+                    round(data$NoGo[k_nogo+1], 4), ")"),
+      xref = "x",
+      yref = "y",
+      showarrow = TRUE,
+      arrowhead = 7,
+      arrowcolor = "#C5C9CB",
+      ax = 50,
+      ay = -40
+    )
+    
+    k_go_text <- paste0("Go Crit. (", k_go, "|",
+                        round(data$Go[k_go+1], 4), ")")
+    
+    k_go_val <- list(
+      x = k_go,
+      y = data$Go[k_go+1],
+      text = k_go_text,
+      xref = "x",
+      yref = "y",
+      showarrow = TRUE,
+      arrowhead = 7,
+      arrowcolor = "#C5C9CB",
+      ax = -50,
+      ay = -40
+    )
+    
+    annotations <- list(k_nogo_val,
+                        k_go_val)
+    
+    fig <- plot_ly(data.molten, x = ~k, y= ~Probability,
+            type = 'scatter', mode = 'lines',
+            line = list(width = 5),
+            color = ~Function) %>%
+      layout(title = 'Cummulative Densities',
+             hovermode="all",
+             xaxis = list(title = 'Number of Successes',
+                          range = c(0, max(data$k)),
+                          showgrid = F),
+             yaxis = list(title = 'Probability',
+                          range = c(0, 1),
+                          showgrid = F),
+             legend = list(orientation = 'h'),
+             # legend = list(x = 0.8, y = 0.5),
+             annotations = annotations,
+             font=font,
+             plot_bgcolor="transparent",
+             paper_bgcolor="transparent")
+    
     return(fig)
   })
-  
+
   output$posterior3DPlot <- renderPlotly({
     
-    # alpha <- input$alpha
-    # beta <- input$beta
-    # theta_u <- input$pi_u
-    # theta_l <- input$pi_l
-    # p_u <- input$p_u
-    # p_l <- input$p_l
-    # 
-    # ## Compute critical values
-    # ## vars for critical value calculation
-    # upper_cdf  <- posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
-    # lower_cdf  <- 1-posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
-    # upper_crit <- min(which(upper_cdf >= p_u))
-    # lower_crit <- max(which(lower_cdf >= p_l))
-
     dens <- dens()
     
     n <- nrow(dens)
@@ -475,14 +504,20 @@ shinyServer(function(input, output) {
     n <- nrow(dens)
     m <- ncol(dens)
     
-    s <- event_data("plotly_click", source="posterior3D")
-    theta <- s$x
+    hover_event <- event_data("plotly_hover", source="posterior3D")
+    click_event <- event_data("plotly_click", source="posterior3D")
+    
+    validate(
+      need(!is.null(click_event), "Please click in the density plot above to select a projection.")
+    )
+    
+    theta <- click_event$x
     thetas <- seq(0, 1, length.out=m)
     
     i <- match(theta, thetas)
     dens <- dens[, i]
     dens <- dens/sum(dens)
-    dens <- cumsum(dens)
+    
     data <- data.frame(k=1:n,
                        Density=dens)
     
@@ -515,16 +550,20 @@ shinyServer(function(input, output) {
     dens <- dens()
     n <- nrow(dens)
     m <- ncol(dens)
-    s <- event_data("plotly_click", source="posterior3D")
-    k <- s$y
+    hover_event <- event_data("plotly_hover", source="posterior3D")
+    click_event <- event_data("plotly_click", source="posterior3D")
+    
+    validate(
+      need(!is.null(click_event), "Please click in the density plot above to select a projection.")
+    )
+    
+    
+    k <- click_event$y
     thetas <- seq(0, 1, length.out=m)
     
     dens <- dens[k, ]
     dens <- dens/sum(dens)
-    dens <- cumsum(dens)
     
-    print(dens[10])
-    print(pbinom(.1, 1,1))
     # dens <- dens/m ## scale based on theta resolution
     
     data <- data.frame(theta=thetas,
@@ -541,7 +580,7 @@ shinyServer(function(input, output) {
                                color="#510E61")) %>%
       layout(title = sprintf("For k=%i", k),
              hovermode="all",
-             xaxis = list(title = 'theta_0',
+             xaxis = list(title = 'θ',
                           tick0 = 0,
                           dtick = 0.1,
                           showgrid = F),
@@ -555,75 +594,59 @@ shinyServer(function(input, output) {
     return(fig)
   })
   
-
-  # output$powerCurvePlot <- renderPlot({
-  # 
-  #   n <- input$n
-  #   alpha <- input$alpha
-  #   beta  <- input$beta
-  #   theta_u <- input$pi_u
-  #   theta_l <- input$pi_l
-  #   p_u <- input$p_u
-  #   p_l <- input$p_l
-  # 
-  #   upper_cdf <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
-  #   lower_cdf <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
-  #   upper_crit <- max(which(upper_cdf >= p_u))
-  #   lower_crit <- min(which(lower_cdf >= p_l))
-  # 
-  #   thetas <- seq(0, 1, length.out=100)
-  #   upper_power <- posterior2(thetas, n, upper_crit, alpha, beta)
-  #   upper_power <- upper_power/length(thetas)
-  #   upper_power <- 1-cumsum(upper_power)
-  # 
-  #   lower_power <- posterior2(thetas, n, lower_crit, alpha, beta)
-  #   lower_power <- lower_power/length(thetas)
-  #   lower_power <- cumsum(lower_power)
-  # 
-  #   overall_power <- lower_power- (1-upper_power)
-  #   overall_power <- overall_power/length(thetas)
-  #   overall_power <- overall_power/sum(overall_power)
-  #   fig <- plotPowerCurves(thetas,
-  #                          upper_power, lower_power, overall_power,
-  #                          upper_crit, lower_crit)
-  #   return(fig)
-  # })
-
-  output$powerCurvePlot2 <- renderPlotly({
-
-    # eventdata <- event_data("plotly_hover", source = "cdfPlot")
-    # validate(need(!is.null(eventdata), "Hover over the cdf chart to populate this power plot"))
+  output$powerCurvePlot <- renderPlotly({
 
     n <- input$n
     alpha <- input$alpha
     beta  <- input$beta
-    theta_u <- input$pi_u
-    theta_l <- input$pi_l
-    p_u <- input$p_u
-    # p_u <- subset(eventdata, curveNumber==0)$y
-    p_l <- input$p_l
-    # p_l <- subset(eventdata, curveNumber==1)$y
-
-    upper_cdf <- 1-posteriorCDF(1:n, theta_u, alpha, beta) # P(theta > theta_u|n) = 1 - probbeta(theta, alpha+k, beta+n-k)
-    lower_cdf <- posteriorCDF(1:n, theta_l, alpha, beta) # P(theta < theta_l|n) = probbeta(theta_l, alpha+k, beta+n-k)
-    upper_crit <- max(which(upper_cdf >= p_u))
-    lower_crit <- min(which(lower_cdf >= p_l))
-
-    thetas <- seq(0, 1, length.out=100)
-    upper_power <- posterior2(thetas, n, upper_crit, alpha, beta)
-    upper_power <- upper_power/length(thetas)
-    upper_power <- cumsum(upper_power)
-
-    lower_power <- posterior2(thetas, n, lower_crit, alpha, beta)
-    lower_power <- lower_power/length(thetas)
-    lower_power <- 1-cumsum(lower_power)
-
-    overall_power <- (1-lower_power) - upper_power
-    overall_power <- overall_power/length(thetas)
-    overall_power <- overall_power/sum(overall_power)
-    fig <- plotPowerCurves2(thetas,
-                            upper_power, lower_power, overall_power,
-                            upper_crit, lower_crit)
+    theta <- input$theta_0
+    p_go <- input$p_go
+    p_nogo <- input$p_nogo
+    
+    validate(need(sum(p_go, p_nogo) >= 1, "The sum of Go and NoGo probabilities should be larger or equal to 1."))
+    
+    ## Compute probability P(k|theta) and estimate critical k for which
+    ## the following conditions are fullfilled
+    ## 1) "Go" decision iff P(theta <= theta_0|k_go) < 1 - p_go
+    ## 2) "No Go" decision iff P(theta <= theta_0|k_nogo) < p_nogo
+    ##
+    ## Condition 1 can be solved by searching the greatest k with 
+    ## cumsum(dbeta(theta_0, alpha+k, beta+n-k)) <= 1 - p_go
+    ##
+    ## Condition 2 can be solved by searching the greatest k with 
+    ## cumsum(dbeta(theta_0, alpha+k, beta+n-k)) >= p_nogo
+    k_go   <- crit_k(theta=theta, prob=p_go, 
+                     n=n, alpha=alpha, beta=beta, 
+                     type="go")
+    k_nogo <- crit_k(theta=theta, prob=p_nogo, n=n, 
+                     alpha=alpha, beta=beta, 
+                     type="nogo")
+    
+    print(k_go)
+    print(k_nogo)
+    
+    ## Go Power
+    theta <- seq(0, 1, by=.001)
+    go_pwr <- sapply(theta, function(theta) probbnml(theta, n, k_go))
+    # go_pwr <- 1 - go_pwr
+    go_pwr <- 1 - go_pwr
+    
+    ## No Go Power
+    # no_go_pwr <- sapply(theta, function(theta) probbnml(theta, n, k_nogo)) 
+    no_go_pwr <- sapply(theta, function(theta) probbnml(theta, n, k_nogo)) 
+    
+    ## Indecisive Power
+    # indecisive_pwr <- 1 - no_go_pwr - go_pwr
+    indecisive_pwr <- 1 - no_go_pwr - go_pwr
+    
+    # ## Sanity check
+    a <- no_go_pwr[which.max(indecisive_pwr)]
+    b <- go_pwr[which.max(indecisive_pwr)]
+    c <- max(indecisive_pwr)
+    print("Sane?")
+    print(sum(a, b, c) == 1)
+    
+    fig <- plotPowerCurves(theta, go_pwr, no_go_pwr, indecisive_pwr)
     return(fig)
   })
 

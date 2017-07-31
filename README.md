@@ -8,7 +8,7 @@ the number of samples can be computed.
 
 ![A fancy .gif presenting the app](img/BayesianSampleSizeApp.gif)
 
-Access the application [here](“https://jhooge.shinyapps.io/BayesianParameterEstimation/”).
+Access the application [here](https://jhooge.shinyapps.io/BayesianParameterEstimation/).
 
 ## Motivation
 In clinical research, parameters required for sample size calculation are 
@@ -21,5 +21,6 @@ prior knowledge about the underlying distribution of successes.
 
 ## Author
 Name: Jens Hooge
-    Email: [jens.hooge@bayer.com](mailto:jens.hooge@bayer.com)
 
+
+Email: [jens.hooge@bayer.com](mailto:jens.hooge@bayer.com)

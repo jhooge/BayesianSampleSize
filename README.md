@@ -6,7 +6,7 @@ It assumes a beta-binomaial model and a single treatment class. Based on the num
 (drawn from a binomial distribution) and prior knowledge (following a beta distribution),
 the number of samples can be computed.
 
-![A fancy .gif presenting the app](img/BayesianSampleSize.gif)
+![A fancy .gif presenting the app](img/BayesianSampleSizeApp.gif)
 
 ## Motivation
 In clinical research, parameters required for sample size calculation are 
@@ -15,8 +15,9 @@ studies as the true parameters in the calculation.
 This approach, however, does not take into consideration sampling error. 
 Thus, the resulting sample size could be misleading if the sampling error 
 is substantial. As an alternative, we suggest a Bayesian approach to include
-prior knowledge about the underlying 
+prior knowledge about the underlying distribution of successes.
 
 ## Author
-Jens Hooge [jens.hooge@bayer.com](mailto:jens.hooge@bayer.com)
+Name: Jens Hooge
+Email: [jens.hooge@bayer.com](mailto:jens.hooge@bayer.com)
 

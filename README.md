@@ -8,7 +8,7 @@ the number of samples can be computed.
 
 ![A fancy .gif presenting the app](img/BayesianSampleSizeApp.gif)
 
-Access the application [here](https://jhooge.shinyapps.io/BayesianParameterEstimation/).
+Access the application [here](https://jhooge.shinyapps.io/bayesian_sample_size_calculation/).
 
 ## Motivation
 In clinical research, parameters required for sample size calculation are 

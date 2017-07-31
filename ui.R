@@ -68,28 +68,7 @@ shinyUI(fluidPage(
                numericInput("beta", withMathJax("$$\\beta$$"),
                             min = 0, step=.05, value = 1))
       )
-      # h3("Hypothesis Parameters"),
-      # h3(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}:\\ Go$$")),
-      # fluidRow(
-      #   column(4,
-      #          numericInput("pi_u", withMathJax("$$\\pi_{u}$$"),
-      #                       min = 0, max = 1, step=.01, value = .5))
-        # column(4,
-        #        numericInput("p_u", withMathJax("$$p_{u}$$"),
-        #        min = 0, max = 1, step=.01, value = .5))
-      # ),
-      # h3(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}:\\ No\\ Go$$"))
-      # fluidRow(
-      #   column(4,
-      #          numericInput("pi_l", withMathJax("$$\\pi_{l}$$"),
-      #          min = 0, max = 1, step=.01, value = .5))
-        # column(4,
-        #        numericInput("p_l", withMathJax("$$p_{l}$$"),
-        #        min = 0, max = 1, step=.01, value = .5))
-      # )
     ),
-
-    # Show a plot of the generated distribution
     mainPanel(
       tabsetPanel(type = "tabs",
                   tabPanel("Posterior Estimation",
@@ -133,29 +112,6 @@ shinyUI(fluidPage(
                                       h3("Posterior"),
                                       tableOutput("pointEst_Posterior")))
                            )),
-                  # tabPanel("Power Calculation",
-                  #          br(),
-                  #          wellPanel(
-                  #            fluidRow(column(6, plotlyOutput("posteriorCDFPlot2")),
-                  #                     # h3("Hypothesis Parameters"),
-                  #                     column(3, h4(withMathJax("$$P(\\pi\\geq\\pi_{u})>p_{u}:\\ Go$$")),
-                  #                            sliderInput("pi_u", withMathJax("$$\\pi_{u}$$"),
-                  #                                        min = 0, max = 1, step=.01, value = .5,
-                  #                                        animate=T),
-                  #                            sliderInput("p_u", withMathJax("$$p_{u}$$"),
-                  #                                        min = 0, max = 1, step=.01, value = .5,
-                  #                                        animate=T)),
-                  #                     column(3, h4(withMathJax("$$P(\\pi<\\pi_{l})>p_{l}:\\ No\\ Go$$")),
-                  #                            sliderInput("pi_l", withMathJax("$$\\pi_{l}$$"),
-                  #                                        min = 0, max = 1, step=.01, value = .5,
-                  #                                        animate=T),
-                  #                            sliderInput("p_l", withMathJax("$$p_{l}$$"),
-                  #                                        min = 0, max = 1, step=.01, value = .5,
-                  #                                        animate=T)))
-                  #          ),
-                  #          wellPanel(
-                  #           fluidRow(column(6, plotlyOutput("powerCurvePlot2")))
-                  #          )),
                   tabPanel("Exploration",
                            br(),
                            wellPanel(

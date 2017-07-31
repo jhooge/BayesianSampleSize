@@ -43,6 +43,15 @@ densbeta <- function(theta, n, k, alpha=1, beta=1) {
   x <- dbeta(theta, alpha+k, beta+n-k)
   return(x)
 }
+
+## Beta Binomial over k's
+my_dbeta <- function(n, k, alpha, beta) {
+  a <- base::beta(alpha+k, beta+n-k)*choose(n, k)
+  b <- base::beta(alpha, beta)
+  x <- a/b
+  return(x)
+}
+
 #' Reimplementation of PROBNML function in SAS
 #' @description computes the probability that an observation from a 
 #'              binomial distribution Bin(n,theta) will be less than or equal to k. 
@@ -77,7 +86,8 @@ crit_k <- function(theta, prob, n, alpha=1, beta=1, type=c("go", "nogo")) {
   stopifnot(type %in% c("go", "nogo"))
   
   x <- sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta))
-  x <- x/length(x)
+  x <- x/sum(x)
+  # x <- sapply(0:n, function(k) my_dbeta(n, k, alpha, beta))
   x <- cumsum(x)
   
   k <- ifelse(type=="go", 
@@ -271,10 +281,14 @@ shinyServer(function(input, output) {
     n <- input$n
 
     probInput <- numericInput("pi", withMathJax("$$\\textbf{Success}\\ \\textbf{Probability}\\ \\theta$$"),
-                              min = 0, max = 1, step=.1, value = .5,
+                              min = 0, max = 1, step = .1, 
+                              # value = value,
+                              value = .5,
                               width = "40%")
     successInput <- numericInput("k", withMathJax("$$\\textbf{Number of Successes}\\ k$$"),
-                                 min = 0, max = n, step=1, value = floor(n/2),
+                                 min = 0, max = n, step = 1, 
+                                 # value = floor(value),
+                                 value = floor(n/2),
                                  width = "40%")
 
     uiElement <- switch(input$radioSample,
@@ -370,11 +384,11 @@ shinyServer(function(input, output) {
   
   output$critValPlot <- renderPlotly({
     
-    n <- input$n
-    theta <- input$theta_0
-    alpha <- input$alpha
-    beta  <- input$beta
-    p_go <- input$p_go
+    n      <- input$n
+    theta  <- input$theta_0
+    alpha  <- input$alpha
+    beta   <- input$beta
+    p_go   <- input$p_go
     p_nogo <- input$p_nogo
     
     validate(need(sum(p_go, p_nogo) >= 1, "The sum of Go and NoGo probabilities should be larger or equal to 1."))
@@ -382,18 +396,31 @@ shinyServer(function(input, output) {
     k_go   <- crit_k(theta=theta, prob=p_go, n=n, alpha=alpha, beta=beta, type="go")
     k_nogo <- crit_k(theta=theta, prob=p_nogo, n=n, alpha=alpha, beta=beta, type="nogo")
     
-    prob_go <- cumsum(sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta)))
+    prob_go <- sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta))
+    # prob_go <- prob_go/length(prob_go)
     prob_go <- prob_go/length(prob_go)
+    # print(prob_go)
+    # print(sum(prob_go))
+    prob_go <- cumsum(prob_go)
+    # prob_go <- prob_go/length(prob_go)
+
+    prob_nogo <- sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta))
+    print(sum(prob_nogo/length(prob_nogo)))
+    prob_nogo <- prob_nogo/length(prob_nogo)
+    prob_nogo <- 1-cumsum(prob_nogo)
+    # prob_nogo <- 1-prob_nogo/length(prob_nogo)
     
-    prob_nogo <- cumsum(sapply(0:n, function(k) densbeta(theta, n, k, alpha, beta)))
-    prob_nogo <- 1-prob_nogo/length(prob_nogo)
-    
+    # prob_go <- sapply(0:n, function(k) my_dbeta(n, k, alpha, beta))
+    # prob_go <- cumsum(prob_go)
+    # 
+    # prob_nogo <- sapply(0:n, function(k) my_dbeta(n, k, alpha, beta))
+    # prob_nogo <- 1-cumsum(prob_nogo)
+     
     data <- data.frame(k=0:n,
                        Go=prob_go,
                        NoGo=prob_nogo)
     data.molten <- melt(data, id.vars = "k")
     colnames(data.molten) <- c("k", "Function", "Probability")
-    
     
     font <- list(
       # family = "sans serif",
@@ -442,11 +469,11 @@ shinyServer(function(input, output) {
             color = ~Function) %>%
       layout(title = 'Cummulative Densities',
              hovermode="all",
-             xaxis = list(title = 'Number of Successes',
+             xaxis = list(title = 'Number of Successes (k)',
                           range = c(0, max(data$k)),
                           showgrid = F),
              yaxis = list(title = 'Probability',
-                          range = c(0, 1),
+                          # range = c(0, 1),
                           showgrid = F),
              legend = list(orientation = 'h'),
              # legend = list(x = 0.8, y = 0.5),
@@ -622,8 +649,6 @@ shinyServer(function(input, output) {
                      alpha=alpha, beta=beta, 
                      type="nogo")
     
-    print(k_go)
-    print(k_nogo)
     
     ## Go Power
     theta <- seq(0, 1, by=.001)

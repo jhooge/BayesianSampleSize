@@ -219,8 +219,6 @@ k_go_val <- list(
 annotations <- list(k_nogo_val,
                     k_go_val)
 
-print(annotations)
-
 plot_ly(data.molten, x = ~k, y= ~Probability,
                type = 'scatter', mode = 'lines',
                line = list(width = 5),
